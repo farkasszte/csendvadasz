@@ -1,0 +1,18 @@
+# Csendvadász
+
+> A Csendvadász ingyenes, böngészőben futó tantermi hangerőfigyelő kivetítőre vagy interaktív táblára. Nyugodt szavannát, korallzátonyt, mélyűrt, őskori ártéri síkságot, erdei tisztást, dzsungelt és jeges tengert mutat, ahol félénk állatok jönnek elő, minél tovább marad csendes a terem. Nincs regisztráció, nincs reklám, nincs telepítés; a mikrofon hangját a gép méri, nem rögzíti és nem küldi sehová.
+
+A Csendvadász a pattogó hangerőmérő ellentéte: nincs pontszám, nincs mutató és nincs piros figyelmeztetés. A tanár beállítja a hangerő-célt (Csend, Önálló munka, Pármunka vagy Csoportmunka, illetve bárhová a kettő között), majd elindítja. Az első állat 10–20 csendes másodperc után jön elő, utána néhány percenként egy, ha csend van (Laza, Normál, Élénk, Elmélyült vagy egyéni ritmus). A rövid zajok, például egy kopogás, nem számítanak. Ha a terem tartósan hangos, a jelenet befelhősödik, és — a tanár választása szerint — vagy megáll, vagy az állatok elszöknek. A szavannán, a korallzátonyon, a mélyűrben, az őskorban, az erdőben, a dzsungelben és a Jeges-tengeren egyaránt 17–18 élőlény vagy észlelés vár, gyakori, kevésbé gyakori és ritka szinten. Magyarul, angolul, spanyolul és franciául érhető el, és Chrome-ban, Edge-ben, Firefoxban és Safariban fut laptopon, Chromebookon és interaktív táblán.
+
+A Csendvadász a Shy Safari (teacher.dev) Apache-2.0 licencű nyílt forráskódú projektjének magyar fordítása és továbbfejlesztése. Ingyenes, fizetőfal, reklám és személyes adatok gyűjtése nélkül.
+
+## Oldalak
+
+- [Csendvadász](https://csendvadasz.vercel.app/): maga az alkalmazás
+- [Hogyan működik](https://csendvadasz.vercel.app/#how-it-works): mit tud, hogyan használható az órán, hogyan dönti el, hogy túl hangos a terem, és a gyakori kérdések
+- [A projektről](https://csendvadasz.vercel.app/about): honnan jön, mi a licenc
+- [Adatvédelem](https://csendvadasz.vercel.app/privacy): mit gyűjtünk és mit nem
+
+## Eredeti projekt
+
+- [Shy Safari](https://github.com/teacherdotdev/shy-safari) — Apache License 2.0
