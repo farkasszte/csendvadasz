@@ -303,7 +303,7 @@ const en = {
     "privacy.analytics.link": "privacy policy",
     "privacy.analytics.afterLink":
       " for details. We do not share, sell, or otherwise transfer any visitor data to third parties.",
-    "privacy.contact": "Questions or concerns? Email ",
+    "privacy.contact": "Questions or concerns? Email the maintainer: ",
     "guide.title": "How Shy Safari works",
     "guide.lede":
       "A free classroom noise level monitor that rewards quiet instead of punishing noise.",
@@ -955,7 +955,7 @@ const es = {
     "privacy.analytics.link": "política de privacidad",
     "privacy.analytics.afterLink":
       " de Cloudflare para más detalles. No compartimos, vendemos ni transferimos de ningún otro modo los datos de los visitantes a terceros.",
-    "privacy.contact": "¿Tienes preguntas o dudas? Escribe a ",
+    "privacy.contact": "¿Tienes preguntas o dudas? Escribe al responsable: ",
     "guide.title": "Cómo funciona Shy Safari",
     "guide.lede":
       "Un medidor de ruido gratuito para el aula que premia el silencio en lugar de castigar el ruido.",
@@ -1577,7 +1577,7 @@ const fr = {
     "privacy.analytics.link": "politique de confidentialité",
     "privacy.analytics.afterLink":
       " de Cloudflare pour en savoir plus. Nous ne partageons, ne vendons ni ne transférons d’aucune autre manière les données des visiteurs à des tiers.",
-    "privacy.contact": "Des questions ou des inquiétudes ? Écrivez à ",
+    "privacy.contact": "Des questions ? Écrivez au responsable : ",
     "guide.title": "Comment fonctionne Shy Safari",
     "guide.lede":
       "Un sonomètre gratuit pour la classe qui récompense le calme au lieu de punir le bruit.",
@@ -2198,7 +2198,7 @@ const hu = {
     "privacy.analytics.link": "Apache-2.0 licenc",
     "privacy.analytics.afterLink":
       " licenc alatt használható fel — ugyanazon licenc alatt, amelyen az eredeti Shy Safari is megjelent.",
-    "privacy.contact": "Kérdés vagy észrevétel? A projekt oldala: ",
+    "privacy.contact": "Kérdés vagy észrevétel? Írj a gondozónak: ",
     "guide.title": "Hogyan működik a Csendvadász",
     "guide.lede":
       "Ingyenes tantermi hangerőfigyelő, amely a csendet jutalmazza, nem a zajt bünteti.",

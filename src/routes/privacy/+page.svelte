@@ -28,10 +28,8 @@
     </p>
     <p>
       {t("privacy.contact")}<a
-        href="https://github.com/teacherdotdev/shy-safari"
-        target="_blank"
-        rel="noopener noreferrer"
-        class={link}>GitHub</a
+        href="mailto:farkas.szte@gmail.com?subject=Csendvad%C3%A1sz%20adatv%C3%A9delem"
+        class={link}>farkas.szte@gmail.com</a
       >.
     </p>
   </section>

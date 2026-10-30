@@ -63,5 +63,12 @@
         >{t("about.licenceLink")}</a
       >
     </p>
+    <p class="mt-3 text-sm text-slate-600">
+      {t("about.feedbackTitle")}:
+      <a
+        href="mailto:farkas.szte@gmail.com?subject=Csendvad%C3%A1sz%20visszajelz%C3%A9s"
+        class={link}>farkas.szte@gmail.com</a
+      >
+    </p>
   </section>
 </DocPage>

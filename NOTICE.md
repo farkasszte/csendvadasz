@@ -7,6 +7,7 @@ fordítása és továbbfejlesztése.
 - Eredeti készítők: **teacher.dev** (<https://teacher.dev>), az EdTech-a-thon
   közösségi eseményén készült prototípusból
 - Licenc: **Apache License, Version 2.0** — a teljes szöveg a `LICENSE.txt`-ben
+- A magyar változat gondozója: **Farkas Gergely** — <farkas.szte@gmail.com>
 
   This product includes software developed at teacher.dev, published as
   "Shy Safari" under the Apache License, Version 2.0.

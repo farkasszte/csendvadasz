@@ -16,3 +16,6 @@ A Csendvadász a Shy Safari (teacher.dev) Apache-2.0 licencű nyílt forráskód
 ## Eredeti projekt
 
 - [Shy Safari](https://github.com/teacherdotdev/shy-safari) — Apache License 2.0
+## Kapcsolat
+
+A magyar változat gondozója: Farkas Gergely — farkas.szte@gmail.com
