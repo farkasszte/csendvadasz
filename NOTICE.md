@@ -37,10 +37,10 @@ logója és a teacher.dev, illetve az EdTech-a-thon márkajelei nem kerültek á
    `echoCancellation` ki), mert az automatikus erősítés épp a hangos teremben
    mér alá. Új fájl: `src/lib/audio/measurement.ts` (+ teszt),
    módosítva: `src/lib/audio/microphone.svelte.ts`.
-5. **Idősebb korosztály.** Új hangerő-cél sáv „Csoportmunka” (65) és új
-   érkezési ritmus „Elmélyült munka” (12 perc) a
+5. **Idősebb korosztály.** Új munkajelleg-kártya „Csoportmunka” (65%) a
    `src/lib/settings/settings.svelte.ts`-ben; alapértelmezés: a jelenet megáll
-   (`loudResponse: "pause"`) és a hangerőmérő látszik (`showMeter: true`).
+   (`loudResponse: "pause"`). A hangerőmérő kivetítése az eredetinek megfelelően
+   **kikapcsolt** (`showMeter: false`).
 6. **Osztályok kódba mentése.** Új fájlok: `src/lib/classes/backup.ts`
    (+ teszt), a `classes.svelte.ts` `exportCode()` / `importCode()` metódusa,
    és a felület a `ClassesPanel.svelte`-ben — így a gyűjtemény másik gépre is
@@ -48,11 +48,14 @@ logója és a teacher.dev, illetve az EdTech-a-thon márkajelei nem kerültek á
 7. **Oldalak.** A „A projektről” oldal új, licenc- és köszönetmondattal, az
    adatvédelmi oldal hivatkozásai a licence, illetve a projekt oldalára
    mutatnak.
-8. **Óra menete.** Négy fázis (Bevezető, Önálló munka, Csoportmunka,
-   Összegzés), mindegyikhez **állítható** hangerő-cél és érkezési ritmus; a
-   fázisok a vezérlősáv „Óra menete” gombjával egy koppintással beállnak
-   (`settings.svelte.ts` `phases`/`applyPhase`, `ControlBar.svelte`,
-   `SettingsPanel.svelte`).
+8. **Munkajelleg-kártyák mentéssel.** A négy kártya (Csend, Önálló munka,
+   Pármunka, Csoportmunka) saját hangerő-célt és érkezési ritmust tart, és a
+   kártyán meg is jeleníti („42% · 5 percenként egy”). A kiválasztott kártyán
+   egy **Mentés** gomb a mostani beállításokat megerősítés után ráírja a
+   kártyára; kiválasztáskor a mentett értékek lépnek életbe
+   (`settings.svelte.ts` `workTypes`/`useWorkType`/`saveWorkType`,
+   `SettingsPanel.svelte`). Az „Elmélyült” érkezési preset ezért kikerült: a
+   ritmust a kártya tartja.
 9. **Aktuális zajszint kijelzése.** A mérő a pillanatnyi szintet számmal is
    mutatja (`LevelMeter.svelte`), hogy a tanár ahhoz tudja állítani a vonalat.
    dB-átalakítás nincs: a szint relatív, a vonal a referencia.

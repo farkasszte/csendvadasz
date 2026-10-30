@@ -13,15 +13,13 @@
   import type { App } from "$lib/app.svelte";
   import {
     ARRIVAL_RATE_PRESETS,
-    LESSON_PHASES,
     MAX_ARRIVAL_MINUTES,
     MIN_ARRIVAL_MINUTES,
-    VOLUME_GOAL_PRESETS,
+    WORK_TYPES,
     settings,
     type ArrivalRatePreset,
-    type LessonPhase,
     type LoudResponse,
-    type VolumeGoalPreset,
+    type WorkType,
   } from "$lib/settings/settings.svelte";
   import Calibration from "./Calibration.svelte";
   import HalloweenPreview from "./HalloweenPreview.svelte";
@@ -29,10 +27,6 @@
 
   let { app, onclose }: { app: App; onclose: () => void } = $props();
 
-  const goalPresets = Object.entries(VOLUME_GOAL_PRESETS) as [
-    Exclude<VolumeGoalPreset, "custom">,
-    (typeof VOLUME_GOAL_PRESETS)["silent"],
-  ][];
   const ratePresets = Object.entries(ARRIVAL_RATE_PRESETS) as [
     Exclude<ArrivalRatePreset, "custom">,
     (typeof ARRIVAL_RATE_PRESETS)["normal"],
@@ -41,19 +35,29 @@
   /** Run away first: it is the default. */
   const LOUD_RESPONSES: LoudResponse[] = ["flee", "pause"];
 
-  /**
-   * A fázisok nevei: a két szélső saját kulcs, a középső kettő a hangerő-
-   * célok nyelvét használja, hogy ugyanazt a szót lássa a tanár mindkét
-   * helyen.
-   */
-  const PHASE_LABELS: Record<LessonPhase, UiKey> = {
-    intro: "phase.intro",
-    independent: "goal.independent.label",
-    group: "goal.group.label",
-    wrapUp: "phase.wrapUp",
-  };
+  /** Melyik kártyára kérdeztünk rá a mentés előtt; `null`, ha egyikre sem. */
+  let confirmingSave = $state<WorkType | null>(null);
 
-  const phaseLabel = (id: LessonPhase) => t(PHASE_LABELS[id]);
+  const workTypeName = (id: WorkType) => t(`goal.${id}.label` as UiKey);
+
+  /** A kártyára mentett értékek: a tanár ezt látja a kártyán. */
+  const workTypeSummary = (id: WorkType) =>
+    t("workType.summary", {
+      goal: settings.workTypes[id].goal,
+      minutes: settings.workTypes[id].minutes,
+    });
+
+  /** A kártya kiválasztása és a mentés megerősítése. */
+  function chooseWorkType(id: WorkType) {
+    confirmingSave = null;
+    settings.useWorkType(id);
+  }
+
+  function saveWorkType() {
+    if (!confirmingSave) return;
+    settings.saveWorkType(confirmingSave);
+    confirmingSave = null;
+  }
 
   let previewOpen = $state(false);
 </script>
@@ -143,77 +147,81 @@
         tooLoud={app.monitor.state === "too-loud"}
         onGoalChange={(goal) => settings.setVolumeGoal(goal)}
       />
+      <!--
+        Munkajelleg-kártyák. Mindegyik a saját hangerő-célját és érkezési
+        ritmusát mutatja, és a kiválasztott kártyára a mostani beállítások
+        egy megerősített mentéssel ráírhatók: a tanár a vonalat húzva
+        hangol, majd elmenti az adott munkajellegre.
+      -->
       <div class="grid grid-cols-2 gap-2">
-        {#each goalPresets as [key] (key)}
-          <button
-            class="rounded-md border px-2 py-2 text-left text-sm {settings.volumeGoalPreset ===
-            key
+        {#each WORK_TYPES as key (key)}
+          {@const active = settings.volumeGoalPreset === key}
+          <div
+            class="rounded-md border px-2 py-2 text-sm {active
               ? 'border-slate-900 bg-slate-900 text-white'
-              : 'border-slate-300 hover:bg-slate-50'}"
-            onclick={() => settings.useVolumeGoalPreset(key)}
+              : 'border-slate-300'}"
           >
-            <span class="block font-semibold"
-              >{t(`goal.${key}.label` as UiKey)}</span
+            <button
+              type="button"
+              class="block w-full text-left"
+              aria-pressed={active}
+              onclick={() => chooseWorkType(key)}
             >
-            <span class="block text-xs opacity-80"
-              >{t(`goal.${key}.hint` as UiKey)}</span
-            >
-          </button>
-        {/each}
-      </div>
-      <div class="mt-1 rounded-lg border border-slate-200 p-3">
-        <p class="text-sm font-medium text-slate-700">{t("phase.title")}</p>
-        <p class="mt-1 text-xs text-slate-500">{t("phase.hint")}</p>
-        <ul class="mt-2 space-y-1.5">
-          {#each LESSON_PHASES as id (id)}
-            {@const phase = settings.phases[id]}
-            <li class="flex flex-wrap items-center gap-1.5">
-              <span class="w-24 shrink-0 text-sm text-slate-700"
-                >{phaseLabel(id)}</span
+              <span class="block font-semibold"
+                >{t(`goal.${key}.label` as UiKey)}</span
               >
-              <label class="flex items-center gap-1 text-xs text-slate-500">
-                <span class="sr-only">{t("phase.goalLabel")}</span>
-                <input
-                  type="number"
-                  min="1"
-                  max="99"
-                  step="1"
-                  value={phase.goal}
-                  class="w-16 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                  oninput={(event) =>
-                    settings.setPhase(id, {
-                      goal: Number(event.currentTarget.value),
-                    })}
-                />
-                <span aria-hidden="true">%</span>
-              </label>
-              <label class="flex items-center gap-1 text-xs text-slate-500">
-                <span class="sr-only">{t("phase.minutesLabel")}</span>
-                <input
-                  type="number"
-                  min={MIN_ARRIVAL_MINUTES}
-                  max={MAX_ARRIVAL_MINUTES}
-                  step="1"
-                  value={phase.minutes}
-                  class="w-16 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900"
-                  oninput={(event) =>
-                    settings.setPhase(id, {
-                      minutes: Number(event.currentTarget.value),
-                    })}
-                />
-                <span>{t("settings.minutes")}</span>
-              </label>
+              <span class="block text-xs opacity-80"
+                >{t(`goal.${key}.hint` as UiKey)}</span
+              >
+              <span class="mt-1 block text-xs font-medium tabular-nums"
+                >{workTypeSummary(key)}</span
+              >
+            </button>
+            {#if active}
               <button
                 type="button"
-                class="ml-auto rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-50"
-                onclick={() => settings.applyPhase(id)}
+                class="mt-1.5 w-full rounded border border-white/40 bg-white/10 px-2 py-1 text-xs font-medium hover:bg-white/20"
+                onclick={() => (confirmingSave = key)}
               >
-                {t("phase.apply")}
+                {t("workType.save")}
               </button>
-            </li>
-          {/each}
-        </ul>
+            {/if}
+          </div>
+        {/each}
       </div>
+
+      {#if confirmingSave}
+        <div
+          class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-slate-800"
+          role="alertdialog"
+          aria-label={t("workType.save")}
+        >
+          <p>
+            {t("workType.saveQuestion", {
+              name: workTypeName(confirmingSave),
+              goal: settings.volumeGoal,
+              minutes: settings.arrivalMinutes,
+            })}
+          </p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="rounded-full bg-slate-900 px-4 py-1.5 text-sm font-medium text-white"
+              onclick={saveWorkType}
+            >
+              {t("workType.saveYes")}
+            </button>
+            <button
+              type="button"
+              class="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm hover:bg-slate-50"
+              onclick={() => (confirmingSave = null)}
+            >
+              {t("workType.saveNo")}
+            </button>
+          </div>
+        </div>
+      {/if}
+
       <Calibration
         microphone={app.microphone}
         calibration={settings.calibration}

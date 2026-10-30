@@ -12,28 +12,45 @@ import { browser } from "$app/environment";
 import type { Calibration } from "$lib/audio/calibration";
 import { DEFAULT_SCENE, SCENE_IDS, type SceneId } from "$lib/scenes/types";
 
-export type VolumeGoalPreset =
-  "silent" | "independent" | "partner" | "group" | "custom";
-export type ArrivalRatePreset =
-  "relaxed" | "normal" | "lively" | "deep" | "custom";
+/**
+ * A munkajelleg-kártyák. Mindegyik a saját hangerő-célját és érkezési
+ * ritmusát tartja, és a tanár a mostani beállításait egy kártyára mentheti:
+ * így egy teremhez és egy osztályhoz egyszer kell beállítani, utána elég egy
+ * koppintás. A gyári érték csak kiindulás.
+ */
+export type WorkType = "silent" | "independent" | "partner" | "group";
+
+export const WORK_TYPES: WorkType[] = [
+  "silent",
+  "independent",
+  "partner",
+  "group",
+];
+
+export type VolumeGoalPreset = WorkType | "custom";
+export type ArrivalRatePreset = "relaxed" | "normal" | "lively" | "custom";
 /**
  * What Too Loud does to the Creatures already out: hold still until the room
  * settles, or start running away. See docs/adr/0003-animals-can-run-away.md.
  */
 export type LoudResponse = "flee" | "pause";
 
-export const VOLUME_GOAL_PRESETS: Record<
-  Exclude<VolumeGoalPreset, "custom">,
-  { goal: number }
-> = {
-  silent: { goal: 15 },
-  independent: { goal: 30 },
-  partner: { goal: 50 },
+export interface WorkTypeSetting {
+  /** Hangerő-cél, 1–99, ugyanazon a skálán, mint a mérő vonala. */
+  goal: number;
+  /** Állatok érkezése, egész percben. */
+  minutes: number;
+}
+
+export const DEFAULT_WORK_TYPES: Record<WorkType, WorkTypeSetting> = {
+  silent: { goal: 15, minutes: 8 },
+  independent: { goal: 30, minutes: 5 },
+  partner: { goal: 50, minutes: 2 },
   // Csoportmunka: a megbeszélés és az együtt dolgozás hangosabb a pármunkánál,
   // és a magyar középiskolai gyakorlatban ez a leggyakoribb „még rendben van”
   // szint. Enélkül a tanár kénytelen a pármunka-sávot feljebb húzni, és akkor
   // elveszíti a két szint közötti különbséget.
-  group: { goal: 65 },
+  group: { goal: 65, minutes: 2 },
 };
 
 export const ARRIVAL_RATE_PRESETS: Record<
@@ -43,38 +60,6 @@ export const ARRIVAL_RATE_PRESETS: Record<
   relaxed: { minutes: 8 },
   normal: { minutes: 5 },
   lively: { minutes: 2 },
-  // Elmélyült munka: 45 perces órán a sűrű érkezés megzavarja a koncentrációt,
-  // ezért itt ritkábban jön állat — a csend jutalma a jelenet nyugalma.
-  deep: { minutes: 12 },
-};
-
-/**
- * Az óra fázisai: egy koppintás beállítja hozzá a hangerő-célt és az érkezési
- * ritmust. A küszöbök tanáronként és termenként mások, ezért mindkettő
- * állítható — a gyári érték csak kiindulás. A „Bevezető" és az „Összegzés"
- * csendes (a tanár beszél), az önálló munka halk, a csoportmunka hangosabb.
- */
-export type LessonPhase = "intro" | "independent" | "group" | "wrapUp";
-
-export const LESSON_PHASES: LessonPhase[] = [
-  "intro",
-  "independent",
-  "group",
-  "wrapUp",
-];
-
-export interface PhaseSetting {
-  /** Hangerő-cél, 1–99, ugyanazon a skálán, mint a mérő vonala. */
-  goal: number;
-  /** Állatok érkezése, egész percben. */
-  minutes: number;
-}
-
-export const DEFAULT_PHASES: Record<LessonPhase, PhaseSetting> = {
-  intro: { goal: VOLUME_GOAL_PRESETS.silent.goal, minutes: 8 },
-  independent: { goal: VOLUME_GOAL_PRESETS.independent.goal, minutes: 5 },
-  group: { goal: VOLUME_GOAL_PRESETS.group.goal, minutes: 2 },
-  wrapUp: { goal: VOLUME_GOAL_PRESETS.silent.goal, minutes: 8 },
 };
 
 /** Bounds on a typed-in Arrival Rate, in whole minutes. */
@@ -96,8 +81,8 @@ interface StoredSettings {
   showMeter: boolean;
   /** Keep a count of the Creatures that have arrived up over the Scene. */
   showCounter: boolean;
-  /** Órafázisonkénti hangerő-cél és érkezési ritmus. */
-  phases: Record<LessonPhase, PhaseSetting>;
+  /** A munkajelleg-kártyákra mentett cél és ritmus. */
+  workTypes: Record<WorkType, WorkTypeSetting>;
 }
 
 const DEFAULTS: StoredSettings = {
@@ -105,13 +90,13 @@ const DEFAULTS: StoredSettings = {
   deviceId: "",
   calibration: null,
   volumeGoalPreset: "independent",
-  volumeGoal: VOLUME_GOAL_PRESETS.independent.goal,
+  volumeGoal: DEFAULT_WORK_TYPES.independent.goal,
   arrivalRatePreset: "normal",
-  arrivalMinutes: ARRIVAL_RATE_PRESETS.normal.minutes,
+  arrivalMinutes: DEFAULT_WORK_TYPES.independent.minutes,
   loudResponse: "pause",
-  showMeter: true,
+  showMeter: false,
   showCounter: false,
-  phases: DEFAULT_PHASES,
+  workTypes: DEFAULT_WORK_TYPES,
 };
 
 function clampGoal(goal: unknown, fallback: number) {
@@ -129,18 +114,31 @@ function clampMinutes(minutes: unknown, fallback: number) {
   );
 }
 
-/** A mentett fázisok, hiányzó vagy hibás mezővel a gyári értékre esve. */
-function readPhases(stored: unknown): Record<LessonPhase, PhaseSetting> {
-  const saved = (stored ?? {}) as Partial<Record<LessonPhase, PhaseSetting>>;
-  const phases = {} as Record<LessonPhase, PhaseSetting>;
-  for (const id of LESSON_PHASES) {
-    const fallback = DEFAULT_PHASES[id];
-    phases[id] = {
+/** A percértékhez tartozó ritmus-preset, ha van ilyen. */
+function ratePresetFor(minutes: number): ArrivalRatePreset {
+  return (
+    (
+      Object.keys(ARRIVAL_RATE_PRESETS) as Exclude<
+        ArrivalRatePreset,
+        "custom"
+      >[]
+    ).find((preset) => ARRIVAL_RATE_PRESETS[preset].minutes === minutes) ??
+    "custom"
+  );
+}
+
+/** A mentett kártyák, hiányzó vagy hibás mezővel a gyári értékre esve. */
+function readWorkTypes(stored: unknown): Record<WorkType, WorkTypeSetting> {
+  const saved = (stored ?? {}) as Partial<Record<WorkType, WorkTypeSetting>>;
+  const workTypes = {} as Record<WorkType, WorkTypeSetting>;
+  for (const id of WORK_TYPES) {
+    const fallback = DEFAULT_WORK_TYPES[id];
+    workTypes[id] = {
       goal: clampGoal(saved[id]?.goal, fallback.goal),
       minutes: clampMinutes(saved[id]?.minutes, fallback.minutes),
     };
   }
-  return phases;
+  return workTypes;
 }
 
 function read(): StoredSettings {
@@ -157,9 +155,9 @@ function read(): StoredSettings {
           ? DEFAULTS.arrivalMinutes
           : ARRIVAL_RATE_PRESETS[stored.arrivalRatePreset]?.minutes;
     }
-    // A fázisok később kerültek bele: a régi mentésből hiányzó kulcsok a
+    // A kártyák később kerültek bele: a régi mentésből hiányzó kulcsok a
     // gyári értéket kapják, a meglévők pedig érvényes tartományba kerülnek.
-    stored.phases = readPhases(stored.phases);
+    stored.workTypes = readWorkTypes(stored.workTypes);
     // A Scene this version no longer has falls back to the default.
     if (stored.scene && !SCENE_IDS.includes(stored.scene)) delete stored.scene;
     return { ...DEFAULTS, ...stored };
@@ -219,24 +217,51 @@ class Settings {
     return this.#stored.volumeGoalPreset;
   }
 
-  useVolumeGoalPreset(preset: Exclude<VolumeGoalPreset, "custom">) {
+  get workTypes(): Record<WorkType, WorkTypeSetting> {
+    return this.#stored.workTypes;
+  }
+
+  /** Egy kártya kiválasztása: a rá mentett cél és ritmus lép életbe. */
+  useWorkType(id: WorkType) {
+    const slot = this.#stored.workTypes[id];
+    const minutes = clampMinutes(slot.minutes, DEFAULT_WORK_TYPES[id].minutes);
     this.#stored = {
       ...this.#stored,
-      volumeGoalPreset: preset,
-      volumeGoal: VOLUME_GOAL_PRESETS[preset].goal,
+      volumeGoalPreset: id,
+      volumeGoal: clampGoal(slot.goal, DEFAULT_WORK_TYPES[id].goal),
+      arrivalMinutes: minutes,
+      arrivalRatePreset: ratePresetFor(minutes),
     };
     this.#save();
   }
 
-  setVolumeGoal(goal: number) {
-    const clamped = Math.max(1, Math.min(99, Math.round(goal)));
-    const matching = (
-      Object.keys(VOLUME_GOAL_PRESETS) as Exclude<VolumeGoalPreset, "custom">[]
-    ).find((preset) => VOLUME_GOAL_PRESETS[preset].goal === clamped);
+  /**
+   * A mostani cél és ritmus rámentése a kártyára — a felület csak megerősítés
+   * után hívja. A kiválasztás a kártyán marad, hogy látszódjon, mit mentett.
+   */
+  saveWorkType(id: WorkType) {
     this.#stored = {
       ...this.#stored,
-      volumeGoal: clamped,
-      volumeGoalPreset: matching ?? "custom",
+      volumeGoalPreset: id,
+      workTypes: {
+        ...this.#stored.workTypes,
+        [id]: {
+          goal: this.#stored.volumeGoal,
+          minutes: this.#stored.arrivalMinutes,
+        },
+      },
+    };
+    this.#save();
+  }
+
+  /**
+   * A vonal húzása nem veszi le a kiválasztást a kártyáról: a tanár épp azt
+   * hangolja, és a „Mentés" gomb arra írja rá az új értéket.
+   */
+  setVolumeGoal(goal: number) {
+    this.#stored = {
+      ...this.#stored,
+      volumeGoal: Math.max(1, Math.min(99, Math.round(goal))),
     };
     this.#save();
   }
@@ -264,67 +289,10 @@ class Settings {
       MIN_ARRIVAL_MINUTES,
       Math.min(MAX_ARRIVAL_MINUTES, Math.round(minutes)),
     );
-    const matching = (
-      Object.keys(ARRIVAL_RATE_PRESETS) as Exclude<
-        ArrivalRatePreset,
-        "custom"
-      >[]
-    ).find((preset) => ARRIVAL_RATE_PRESETS[preset].minutes === clamped);
     this.#stored = {
       ...this.#stored,
       arrivalMinutes: clamped,
-      arrivalRatePreset: matching ?? "custom",
-    };
-    this.#save();
-  }
-
-  get phases(): Record<LessonPhase, PhaseSetting> {
-    return this.#stored.phases;
-  }
-
-  /** Egy fázis küszöbeinek módosítása; a másik érték marad. */
-  setPhase(id: LessonPhase, patch: Partial<PhaseSetting>) {
-    const current = this.#stored.phases[id];
-    const next: PhaseSetting = {
-      goal: clampGoal(patch.goal ?? current.goal, current.goal),
-      minutes: clampMinutes(patch.minutes ?? current.minutes, current.minutes),
-    };
-    this.#stored = {
-      ...this.#stored,
-      phases: { ...this.#stored.phases, [id]: next },
-    };
-    this.#save();
-  }
-
-  /**
-   * Egy fázis beállítása az órán: hangerő-cél és érkezési ritmus egyszerre.
-   * A preset csak címke: ha a tanár saját küszöböt írt be, az „custom" lesz.
-   */
-  applyPhase(id: LessonPhase) {
-    const phase = this.#stored.phases[id];
-    const goal = clampGoal(phase.goal, DEFAULT_PHASES[id].goal);
-    const minutes = clampMinutes(phase.minutes, DEFAULT_PHASES[id].minutes);
-    const goalPreset =
-      (
-        Object.keys(VOLUME_GOAL_PRESETS) as Exclude<
-          VolumeGoalPreset,
-          "custom"
-        >[]
-      ).find((preset) => VOLUME_GOAL_PRESETS[preset].goal === goal) ?? "custom";
-    const ratePreset =
-      (
-        Object.keys(ARRIVAL_RATE_PRESETS) as Exclude<
-          ArrivalRatePreset,
-          "custom"
-        >[]
-      ).find((preset) => ARRIVAL_RATE_PRESETS[preset].minutes === minutes) ??
-      "custom";
-    this.#stored = {
-      ...this.#stored,
-      volumeGoal: goal,
-      volumeGoalPreset: goalPreset,
-      arrivalMinutes: minutes,
-      arrivalRatePreset: ratePreset,
+      arrivalRatePreset: ratePresetFor(clamped),
     };
     this.#save();
   }

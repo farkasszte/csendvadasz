@@ -10,13 +10,8 @@
    * Pause stops the room being judged while the teacher talks to the class.
    */
 
-  import { t, type UiKey } from "$lib/i18n/index.svelte";
+  import { t } from "$lib/i18n/index.svelte";
   import type { App } from "$lib/app.svelte";
-  import {
-    LESSON_PHASES,
-    settings,
-    type LessonPhase,
-  } from "$lib/settings/settings.svelte";
 
   let {
     app,
@@ -29,38 +24,21 @@
   } = $props();
 
   let confirmingReset = $state(false);
-  /** Az óra fázisainak gyorsmenüje: egy koppintás, és más a hangerő-cél. */
-  let phasesOpen = $state(false);
-
-  const PHASE_LABELS: Record<LessonPhase, UiKey> = {
-    intro: "phase.intro",
-    independent: "goal.independent.label",
-    group: "goal.group.label",
-    wrapUp: "phase.wrapUp",
-  };
-
-  const phaseLabel = (id: LessonPhase) => t(PHASE_LABELS[id]);
 
   function reset() {
     app.resetSession();
     confirmingReset = false;
   }
 
-  // Don't leave a confirmation, or the phase menu, waiting behind the bar
-  // once it fades away.
+  // Don't leave a confirmation waiting behind the bar once it fades away.
   $effect(() => {
-    if (!visible) {
-      confirmingReset = false;
-      phasesOpen = false;
-    }
+    if (!visible) confirmingReset = false;
   });
 </script>
 
 <svelte:window
   onkeydown={(e) => {
-    if (e.key !== "Escape") return;
-    confirmingReset = false;
-    phasesOpen = false;
+    if (e.key === "Escape") confirmingReset = false;
   }}
 />
 
@@ -72,32 +50,6 @@
   aria-hidden={!visible}
 >
   <div class="relative" class:pointer-events-auto={visible}>
-    {#if phasesOpen}
-      <div
-        id="phase-menu"
-        class="absolute bottom-full left-1/2 mb-3 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5 rounded-2xl bg-white/95 px-3 py-2 shadow-lg"
-        role="group"
-        aria-label={t("phase.title")}
-      >
-        {#each LESSON_PHASES as id (id)}
-          {@const phase = settings.phases[id]}
-          <button
-            class="rounded-full border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
-            title={t("phase.summary", {
-              goal: phase.goal,
-              minutes: phase.minutes,
-            })}
-            onclick={() => {
-              settings.applyPhase(id);
-              phasesOpen = false;
-            }}
-          >
-            <span class="font-medium">{phaseLabel(id)}</span>
-          </button>
-        {/each}
-      </div>
-    {/if}
-
     {#if confirmingReset && app.session.running}
       <div
         class="absolute bottom-full left-1/2 mb-3 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-2xl bg-white/95 px-4 py-3 text-center shadow-lg"
@@ -172,17 +124,6 @@
           >
         </button>
       {/if}
-
-      <button
-        class="rounded-full border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 sm:px-4"
-        class:bg-slate-100={phasesOpen}
-        aria-expanded={phasesOpen}
-        aria-controls="phase-menu"
-        title={t("phase.hint")}
-        onclick={() => (phasesOpen = !phasesOpen)}
-      >
-        {t("phase.title")}
-      </button>
 
       <button
         class="rounded-full border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 sm:px-4"

@@ -20,8 +20,10 @@ Az óra menete:
 
 1. Nyisd meg az oldalt, és nyomd meg a **Mikrofon engedélyezése / Indítás**
    gombot. A hangot a gép méri, nem rögzíti és nem küldi sehová.
-2. Válassz jelenetet, hangerő-célt (Csend, Önálló munka, Pármunka,
-   Csoportmunka) és érkezési ritmust (Laza, Normál, Élénk, Elmélyült).
+2. Válassz jelenetet, majd munkajelleg-kártyát (Csend, Önálló munka,
+   Pármunka, Csoportmunka). Mindegyik kártya a saját hangerő-célját és érkezési
+   ritmusát mutatja („42% · 5 percenként egy”), és a kiválasztott kártyán a
+   **Mentés** gombbal a mostani beállítások ráírhatók — megerősítés után.
 3. Dolgozzon az osztály. Ha túl hangos lesz, a jelenet befelhősödik; a
    beállításokban választható, hogy az állatok elszökjenek, vagy csak a jelenet
    álljon meg (alapértelmezés: megáll).
@@ -66,18 +68,16 @@ futásidőben pedig angolra esik vissza.
 
 A teljes lista a `NOTICE.md`-ben. Röviden: magyar nyelv (alapértelmezés),
 saját márka és logó, analitika nélkül, kikapcsolt böngésző-oldali
-hangfeldolgozás a megbízhatóbb mérésért, „Csoportmunka” hangerő-sáv és
-„Elmélyült munka” ritmus az idősebb korosztálynak, valamint kódos
-mentés/betöltés az osztályokhoz (másik gép, vendégprofil).
+hangfeldolgozás a megbízhatóbb mérésért, menthető munkajelleg-kártyák
+(„Csoportmunka” az idősebb korosztálynak), valamint kódos mentés/betöltés az
+osztályokhoz (másik gép, vendégprofil).
 
 ## Következő lépések
 
 - dB-alapú szintskála a lineáris RMS helyett — ehhez valódi teremben mért
   referencia kell (a mostani `rms * 7` a hangos teremben telít).
-- Órafázis-sáv (bevezető / önálló / csoport / összegzés), ami egy koppintással
-  állítja a hangerő-célt és a ritmust.
-- Jelenetenkénti kódbontás: a kliens csomag jelenleg ~2 MB, mert mind a nyolc
-  jelenet SVG-je egy chunkban van.
+- A beállítások jelenleg a böngésző tárolójában élnek: osztályonkénti
+  kártya-készlet (több osztály, más terem) későbbi kérdés.
 
 ## Köszönet
 
